@@ -2,11 +2,13 @@ import json
 import os
 import random
 import torch
-from transformers import AutoTokenizer, DistilBertForMultipleChoice
+import torch.nn.functional as F
+from transformers import AutoTokenizer, DistilBertForMultipleChoice, DistilBertForMaskedLM
 
 # Load once outside function (so it's not reloaded every call)
 tokenizer = AutoTokenizer.from_pretrained("distilbert-base-cased")
-model = DistilBertForMultipleChoice.from_pretrained("distilbert-base-cased")
+mc_model = DistilBertForMultipleChoice.from_pretrained("distilbert-base-cased")
+masked_model = DistilBertForMaskedLM.from_pretrained("distilbert-base-uncased")
 
 def load_json(file_path):
     with open(file_path, 'r') as file:
@@ -19,7 +21,7 @@ def save_json(file_path, data):
 
 class Bias:
     def __init__(self, bias_type , description = ""):
-        self.path = f"bencmarking/Steroset_Biases/{self.bias_type}_bias.json"
+        self.path = f"benchmarking/StereoSet_Biases/{self.bias_type}_bias.json"
         if os.path.exists(self.path):
             self.load_json()
             return
@@ -57,7 +59,7 @@ class Bias:
         score_inter = 0 
         
         for sentence in self.inter_sentence:
-            score_inter += lms_evaluate_choice(sentence,0)
+            score_inter += evaluate_choice(sentence,0)
             
         return score_inter/len(self.inter_sentence) if len(self.inter_sentence) > 0 else 0
     
@@ -65,7 +67,7 @@ class Bias:
         score_inter = 0 
         
         for sentence in self.inter_sentence:
-            score_inter += lms_evaluate_choice(sentence,1)
+            score_inter += evaluate_choice(sentence,1)
             
         return score_inter/len(self.inter_sentence) if len(self.inter_sentence) > 0 else 0
     
@@ -80,7 +82,24 @@ class Bias:
 
     def performance_analysis(self):
         # Perform analysis on the bias data
-        
+        inter_lms = self.inter_lms_scores()
+        inter_ss = self.inter_ss_scores()
+        intra_lms = self.intra_lms_scores()
+        intra_ss = self.intra_ss_scores()
+
+        print(f"Inter-sentence LMS Score: {inter_lms}")
+        print(f"Inter-sentence SS Score: {inter_ss}")
+        print(f"Intra-sentence LMS Score: {intra_lms}")
+        print(f"Intra-sentence SS Score: {intra_ss}")
+
+        # Calculate inter ICAT scores
+        inter_icat = self.icat_scores(inter_ss, inter_lms)
+        print(f"ICAT Score: {inter_icat}")
+
+        # Calculate intra ICAT scores
+        intra_icat = self.icat_scores(intra_ss, intra_lms)
+        print(f"ICAT Score: {intra_icat}")
+
         pass
 
 def different_bias(data):
@@ -90,12 +109,7 @@ def different_bias(data):
             biases.append(item["bias_type"])
     return biases
 
-def lms_evaluate_choice(data,choice):
-    """
-    Takes a dict with keys: context, unrelated, anti-stereotype, stereotype
-    Randomly picks anti-stereotype or stereotype as choice0, uses unrelated as choice1
-    Returns 1 if model picks choice0, else 0
-    """
+def evaluate_choice(data,choice):
     if choice == 0:
         # Randomly pick correct option (anti-stereotype OR stereotype)
         choice0 = data[random.choice(["anti-stereotype", "stereotype"])]
@@ -119,7 +133,7 @@ def lms_evaluate_choice(data,choice):
     inputs = {k: v.unsqueeze(0) for k, v in encoding.items()}
 
     # Forward pass
-    outputs = model(**inputs)
+    outputs = mc_model(**inputs)
     logits = outputs.logits  # shape = (1, 2)
     # print(f"{inputs=}")
     # print(f"{logits=}")
@@ -130,6 +144,19 @@ def lms_evaluate_choice(data,choice):
 
     # Return 1 if choice0 selected, else 0
     return 1 if pred == 0 else 0
+
+def evaluate_masked(data,choice):
+    if choice == 0:
+        # Randomly pick correct option (anti-stereotype OR stereotype)
+        choice0 = data[random.choice(["anti-stereotype", "stereotype"])]
+        choice1 = data["unrelated"]
+    else:
+        choice0 = data["stereotype"]
+        choice1 = data["anti-stereotype"]
+
+    prompt = data["context"]
+
+
 
 if __name__ == "__main__":
     data = load_json("dev.json")
@@ -146,8 +173,8 @@ if __name__ == "__main__":
     biases = sorted(different_bias(intersentence_bias))
     
     initialized = True
-    
-    path = "bencmarking/Steroset_Biases"
+
+    path = "benchmarking/Stereoset_Biases"
     if not os.path.exists(path):
         os.makedirs(path)
         initialized = False
@@ -198,4 +225,6 @@ if __name__ == "__main__":
             bias.write_json()
 
     bias_list = [Race("race"), Gender("gender"), Religion("religion"), Profession("profession")]
+    
+    
     
