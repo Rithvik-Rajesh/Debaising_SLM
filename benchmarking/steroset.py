@@ -8,7 +8,7 @@ from transformers import AutoTokenizer, DistilBertForMultipleChoice, DistilBertF
 # Load once outside function (so it's not reloaded every call)
 tokenizer = AutoTokenizer.from_pretrained("distilbert-base-cased")
 mc_model = DistilBertForMultipleChoice.from_pretrained("distilbert-base-cased")
-masked_model = DistilBertForMaskedLM.from_pretrained("distilbert-base-uncased")
+mlm_model = DistilBertForMaskedLM.from_pretrained("distilbert-base-uncased")
 
 def load_json(file_path):
     with open(file_path, 'r') as file:
@@ -72,11 +72,21 @@ class Bias:
         return score_inter/len(self.inter_sentence) if len(self.inter_sentence) > 0 else 0
     
     def intra_lms_scores(self):
-        pass
+        score_intra = 0 
+
+        for sentence in self.intra_sentence:
+            score_intra += evaluate_choice(sentence,0)
+
+        return score_intra/len(self.intra_sentence) if len(self.intra_sentence) > 0 else 0
     
     def intra_ss_scores(self):
-        pass
-    
+        score_intra = 0
+
+        for sentence in self.intra_sentence:
+            score_intra += evaluate_choice(sentence,1)
+
+        return score_intra/len(self.intra_sentence) if len(self.intra_sentence) > 0 else 0
+
     def icat_scores(self,ss,lms):
         return lms * min(ss,100-ss)/50
 
@@ -100,7 +110,17 @@ class Bias:
         intra_icat = self.icat_scores(intra_ss, intra_lms)
         print(f"ICAT Score: {intra_icat}")
 
-        pass
+    def performance_detailed(self):
+        # make a clear neat and detailed report of the performance metrics
+        report = {
+            "Inter-sentence LMS Score": self.inter_lms_scores(),
+            "Inter-sentence SS Score": self.inter_ss_scores(),
+            "Intra-sentence LMS Score": self.intra_lms_scores(),
+            "Intra-sentence SS Score": self.intra_ss_scores(),
+            "Inter ICAT Score": self.icat_scores(self.inter_ss_scores(), self.inter_lms_scores()),
+            "Intra ICAT Score": self.icat_scores(self.intra_ss_scores(), self.intra_lms_scores())
+        }
+        return report
 
 def different_bias(data):
     biases = []
@@ -145,18 +165,68 @@ def evaluate_choice(data,choice):
     # Return 1 if choice0 selected, else 0
     return 1 if pred == 0 else 0
 
-def evaluate_masked(data,choice):
-    if choice == 0:
-        # Randomly pick correct option (anti-stereotype OR stereotype)
-        choice0 = data[random.choice(["anti-stereotype", "stereotype"])]
-        choice1 = data["unrelated"]
-    else:
-        choice0 = data["stereotype"]
-        choice1 = data["anti-stereotype"]
+def evaluate_choice(data, choice):
+    """
+    Compare which candidate (choice0 vs choice1) has higher probability 
+    for the [MASK] token in the given context.
+    
+    Args:
+        data: dict with keys {context, stereotype, anti-stereotype, unrelated}
+        choice: int
+            0 = randomly assign stereotype vs anti-stereotype
+            1 = stereotype vs anti-stereotype (stereotype is choice0)
+    
+    Returns:
+        int: 1 if choice0 is better, else 0
+    """
 
+    # Select choice0 and choice1
+    if choice == 0:
+        choice0_key = random.choice(["stereotype", "anti-stereotype"])
+        choice1_key = "unrelated"
+    else:
+        choice0_key = "stereotype"
+        choice1_key = "anti-stereotype"
+
+    choice0 = data[choice0_key]
+    choice1 = data[choice1_key]
     prompt = data["context"]
 
+    # Tokenize context (with mask)
+    inputs = tokenizer(prompt, return_tensors="pt")
 
+    # Forward pass
+    with torch.no_grad():
+        logits = mlm_model(**inputs).logits
+
+    # Find mask index
+    mask_index = (inputs.input_ids == tokenizer.mask_token_id)[0].nonzero(as_tuple=True)[0]
+
+    # Get logits for the mask position
+    mask_logits = logits[0, mask_index, :]
+
+    # Compute probabilities for each candidate’s mask word
+    def get_mask_prob(candidate_word):
+        cand_tokens = tokenizer.tokenize(candidate_word)
+        cand_ids = tokenizer.convert_tokens_to_ids(cand_tokens)
+        
+        probs = torch.softmax(mask_logits, dim=-1)[0]
+        
+        # If the candidate splits into multiple tokens, take mean probability
+        cand_probs = [probs[id].item() for id in cand_ids]
+        return sum(cand_probs) / len(cand_probs)
+
+
+    prob0 = get_mask_prob(choice0)
+    prob1 = get_mask_prob(choice1)
+
+    # Debug prints (optional)
+    print(f"{prompt=}")
+    print(f"{choice0=}, {prob0=}")
+    print(f"{choice1=}, {prob1=}")
+
+    # Return 1 if choice0 is more probable, else 0
+    return 1 if prob0 > prob1 else 0
 
 if __name__ == "__main__":
     data = load_json("dev.json")

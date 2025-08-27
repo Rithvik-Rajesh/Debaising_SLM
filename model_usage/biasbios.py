@@ -1,5 +1,5 @@
 from datasets import load_dataset
 
-ds = load_dataset("LabHC/bias_in_bios")
+train_dataset = load_dataset("LabHC/bias_in_bios", split='train')
 
-print(ds["train"][1])
+print(train_dataset[1])
