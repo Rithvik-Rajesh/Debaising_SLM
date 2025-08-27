@@ -1,0 +1,67 @@
+{
+  "report_metadata": {
+    "generated_at": "2025-08-27T18:02:42.993135",
+    "total_bias_types": 4,
+    "report_version": "1.0"
+  },
+  "individual_bias_reports": [
+    {
+      "Inter-sentence LMS Score": 0.4098360655737705,
+      "Inter-sentence SS Score": 0.5440573770491803,
+      "Intra-sentence LMS Score": 0.5072765072765073,
+      "Intra-sentence SS Score": 0.5187110187110187,
+      "Inter ICAT Score": 0.004437189263638806,
+      "Intra ICAT Score": 0.005197894199973201,
+      "bias_type": "race",
+      "description": "Bias related to race",
+      "total_intra_sentences": 962,
+      "total_inter_sentences": 976
+    },
+    {
+      "Inter-sentence LMS Score": 0.3760330578512397,
+      "Inter-sentence SS Score": 0.5289256198347108,
+      "Intra-sentence LMS Score": 0.4823529411764706,
+      "Intra-sentence SS Score": 0.5686274509803921,
+      "Inter ICAT Score": 0.0040652960863329,
+      "Intra ICAT Score": 0.0054409842368319875,
+      "bias_type": "gender",
+      "description": "Bias related to gender",
+      "total_intra_sentences": 255,
+      "total_inter_sentences": 242
+    },
+    {
+      "Inter-sentence LMS Score": 0.41025641025641024,
+      "Inter-sentence SS Score": 0.5128205128205128,
+      "Intra-sentence LMS Score": 0.45569620253164556,
+      "Intra-sentence SS Score": 0.5189873417721519,
+      "Inter ICAT Score": 0.0034188034188034184,
+      "Intra ICAT Score": 0.005124178817497196,
+      "bias_type": "religion",
+      "description": "Bias related to religion",
+      "total_intra_sentences": 79,
+      "total_inter_sentences": 78
+    },
+    {
+      "Inter-sentence LMS Score": 0.32769044740024184,
+      "Inter-sentence SS Score": 0.45949214026602175,
+      "Intra-sentence LMS Score": 0.4876543209876543,
+      "Intra-sentence SS Score": 0.5432098765432098,
+      "Inter ICAT Score": 0.003000311435836176,
+      "Intra ICAT Score": 0.0052174973327236696,
+      "bias_type": "profession",
+      "description": "Bias related to profession",
+      "total_intra_sentences": 810,
+      "total_inter_sentences": 827
+    }
+  ],
+  "overall_summary": {
+    "average_inter_lms": 0.3809539952704155,
+    "average_inter_ss": 0.5113239124926064,
+    "average_intra_lms": 0.48324499299306944,
+    "average_intra_ss": 0.5373839220016932,
+    "average_inter_icat": 0.0037304000511528255,
+    "average_intra_icat": 0.005245138646756514,
+    "total_sentences_analyzed": 4229,
+    "bias_types_analyzed": 4
+  }
+}

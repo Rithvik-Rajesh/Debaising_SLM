@@ -1,0 +1,107 @@
+================================================================================
+                    BIAS PERFORMANCE ANALYSIS REPORT
+================================================================================
+Generated on: 2025-08-27 18:02:42
+Total Bias Types Analyzed: 4
+================================================================================
+
+1. RACE BIAS ANALYSIS
+--------------------------------------------------
+Description: Bias related to race
+Intra-sentence samples: 962
+Inter-sentence samples: 976
+
+PERFORMANCE METRICS:
+  • Inter-sentence LMS Score:  0.4098
+  • Inter-sentence SS Score:   0.5441
+  • Intra-sentence LMS Score:  0.5073
+  • Intra-sentence SS Score:   0.5187
+  • Inter ICAT Score:          0.0044
+  • Intra ICAT Score:          0.0052
+
+PERFORMANCE INTERPRETATION:
+  Inter-sentence: Critical (Very High Bias)
+  Intra-sentence: Critical (Very High Bias)
+
+==================================================
+
+2. GENDER BIAS ANALYSIS
+--------------------------------------------------
+Description: Bias related to gender
+Intra-sentence samples: 255
+Inter-sentence samples: 242
+
+PERFORMANCE METRICS:
+  • Inter-sentence LMS Score:  0.3760
+  • Inter-sentence SS Score:   0.5289
+  • Intra-sentence LMS Score:  0.4824
+  • Intra-sentence SS Score:   0.5686
+  • Inter ICAT Score:          0.0041
+  • Intra ICAT Score:          0.0054
+
+PERFORMANCE INTERPRETATION:
+  Inter-sentence: Critical (Very High Bias)
+  Intra-sentence: Critical (Very High Bias)
+
+==================================================
+
+3. RELIGION BIAS ANALYSIS
+--------------------------------------------------
+Description: Bias related to religion
+Intra-sentence samples: 79
+Inter-sentence samples: 78
+
+PERFORMANCE METRICS:
+  • Inter-sentence LMS Score:  0.4103
+  • Inter-sentence SS Score:   0.5128
+  • Intra-sentence LMS Score:  0.4557
+  • Intra-sentence SS Score:   0.5190
+  • Inter ICAT Score:          0.0034
+  • Intra ICAT Score:          0.0051
+
+PERFORMANCE INTERPRETATION:
+  Inter-sentence: Critical (Very High Bias)
+  Intra-sentence: Critical (Very High Bias)
+
+==================================================
+
+4. PROFESSION BIAS ANALYSIS
+--------------------------------------------------
+Description: Bias related to profession
+Intra-sentence samples: 810
+Inter-sentence samples: 827
+
+PERFORMANCE METRICS:
+  • Inter-sentence LMS Score:  0.3277
+  • Inter-sentence SS Score:   0.4595
+  • Intra-sentence LMS Score:  0.4877
+  • Intra-sentence SS Score:   0.5432
+  • Inter ICAT Score:          0.0030
+  • Intra ICAT Score:          0.0052
+
+PERFORMANCE INTERPRETATION:
+  Inter-sentence: Critical (Very High Bias)
+  Intra-sentence: Critical (Very High Bias)
+
+==================================================
+
+OVERALL BIAS PERFORMANCE SUMMARY
+==================================================
+Total sentences analyzed: 4229
+Bias types covered: 4
+
+AVERAGE METRICS ACROSS ALL BIAS TYPES:
+  • Average Inter-sentence LMS:  0.3810
+  • Average Inter-sentence SS:   0.5113
+  • Average Intra-sentence LMS:  0.4832
+  • Average Intra-sentence SS:   0.5374
+  • Average Inter ICAT Score:    0.0037
+  • Average Intra ICAT Score:    0.0052
+
+OVERALL PERFORMANCE LEVEL:
+  Inter-sentence: Critical (Very High Bias)
+  Intra-sentence: Critical (Very High Bias)
+
+================================================================================
+Report completed successfully.
+================================================================================
