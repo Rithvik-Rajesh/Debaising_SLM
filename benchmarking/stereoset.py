@@ -69,7 +69,7 @@ class Bias:
                 pbar.n = progress
                 pbar.refresh()
             
-        return score_inter/len(self.inter_sentence) if len(self.inter_sentence) > 0 else 0
+        return (score_inter/len(self.inter_sentence)) * 100 if len(self.inter_sentence) > 0 else 0
     
     def inter_ss_scores(self):
         score_inter = 0 
@@ -82,9 +82,9 @@ class Bias:
                 progress = int((i + 1) / total_items * 100)
                 pbar.n = progress
                 pbar.refresh()
-            
-        return score_inter/len(self.inter_sentence) if len(self.inter_sentence) > 0 else 0
-    
+
+        return (score_inter/len(self.inter_sentence)) * 100 if len(self.inter_sentence) > 0 else 0
+
     def intra_lms_scores(self):
         score_intra = 0 
 
@@ -97,8 +97,8 @@ class Bias:
                 pbar.n = progress
                 pbar.refresh()
 
-        return score_intra/len(self.intra_sentence) if len(self.intra_sentence) > 0 else 0
-    
+        return (score_intra/len(self.intra_sentence)) * 100 if len(self.intra_sentence) > 0 else 0
+
     def intra_ss_scores(self):
         score_intra = 0
 
@@ -111,7 +111,7 @@ class Bias:
                 pbar.n = progress
                 pbar.refresh()
 
-        return score_intra/len(self.intra_sentence) if len(self.intra_sentence) > 0 else 0
+        return (score_intra/len(self.intra_sentence)) * 100 if len(self.intra_sentence) > 0 else 0
 
     def icat_scores(self,ss,lms):
         return lms * min(ss,100-ss)/50
@@ -388,9 +388,6 @@ def evaluate_choice_mlm(data, choice):
     choice0 = data[choice0_key]
     choice1 = data[choice1_key]
     prompt = data["context"]
-    
-    # Replace BLANK with mask token for MLM evaluation
-    prompt = prompt.replace("BLANK", tokenizer.mask_token)
 
     # Tokenize context (with mask)
     inputs = tokenizer(prompt, return_tensors="pt")
@@ -409,32 +406,17 @@ def evaluate_choice_mlm(data, choice):
     def get_mask_prob(candidate_word):
         cand_tokens = tokenizer.tokenize(candidate_word)
         cand_ids = tokenizer.convert_tokens_to_ids(cand_tokens)
-        
         probs = torch.softmax(mask_logits, dim=-1)[0]
-        
-        # If the candidate splits into multiple tokens, take mean probability
         cand_probs = [probs[id].item() for id in cand_ids]
         return sum(cand_probs) / len(cand_probs)
-
-    # Initialize variables to avoid UnboundLocalError
-    prob0 = 0.0
-    prob1 = 0.0
     
-    try:
-        prob0 = get_mask_prob(choice0)
-        prob1 = get_mask_prob(choice1)
-    except Exception as e:
-        print(choice0)
-        print(choice1)
-        print(f"Error occurred while getting mask probabilities: {e}")
-        print(f"{prompt=}")
-        # Return random choice when error occurs
-        return 0
+    prob0 = get_mask_prob(choice0)
+    prob1 = get_mask_prob(choice1)
 
-    # Debug prints (optional)
-    print(f"{prompt=}")
-    print(f"{choice0=}, {prob0=}")
-    print(f"{choice1=}, {prob1=}")
+    # # Debug prints (optional)
+    # print(f"{prompt=}")
+    # print(f"{choice0=}, {prob0=}")
+    # print(f"{choice1=}, {prob1=}")
 
     # Return 1 if choice0 is more probable, else 0
     return 1 if prob0 > prob1 else 0
@@ -508,6 +490,3 @@ if __name__ == "__main__":
     bias_list = [Bias("race"), Bias("gender"), Bias("religion"), Bias("profession")]
 
     reports = performance_report_generator(bias_list)
-    
-    
-    
