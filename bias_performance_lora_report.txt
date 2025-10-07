@@ -1,7 +1,7 @@
 ================================================================================
                     BIAS PERFORMANCE ANALYSIS REPORT
 ================================================================================
-Generated on: 2025-08-28 00:32:07
+Generated on: 2025-10-07 13:24:00
 Total Bias Types Analyzed: 4
 ================================================================================
 
@@ -12,11 +12,11 @@ Intra-sentence samples: 962
 Inter-sentence samples: 976
 
 PERFORMANCE METRICS:
-  • Inter-sentence LMS Score:  23.2582
-  • Inter-sentence SS Score:   46.4139
+  • Inter-sentence LMS Score:  34.8361
+  • Inter-sentence SS Score:   59.5287
   • Intra-sentence LMS Score:  83.3680
   • Intra-sentence SS Score:   56.4449
-  • Inter ICAT Score:          21.5901
+  • Inter ICAT Score:          28.1972
   • Intra ICAT Score:          72.6220
 
 PERFORMANCE INTERPRETATION:
@@ -32,11 +32,11 @@ Intra-sentence samples: 255
 Inter-sentence samples: 242
 
 PERFORMANCE METRICS:
-  • Inter-sentence LMS Score:  22.7273
-  • Inter-sentence SS Score:   35.9504
+  • Inter-sentence LMS Score:  23.5537
+  • Inter-sentence SS Score:   46.2810
   • Intra-sentence LMS Score:  78.4314
   • Intra-sentence SS Score:   65.0980
-  • Inter ICAT Score:          16.3411
+  • Inter ICAT Score:          21.8018
   • Intra ICAT Score:          54.7482
 
 PERFORMANCE INTERPRETATION:
@@ -52,11 +52,11 @@ Intra-sentence samples: 79
 Inter-sentence samples: 78
 
 PERFORMANCE METRICS:
-  • Inter-sentence LMS Score:  14.1026
-  • Inter-sentence SS Score:   42.3077
+  • Inter-sentence LMS Score:  33.3333
+  • Inter-sentence SS Score:   56.4103
   • Intra-sentence LMS Score:  82.2785
   • Intra-sentence SS Score:   64.5570
-  • Inter ICAT Score:          11.9329
+  • Inter ICAT Score:          29.0598
   • Intra ICAT Score:          58.3240
 
 PERFORMANCE INTERPRETATION:
@@ -72,11 +72,11 @@ Intra-sentence samples: 810
 Inter-sentence samples: 827
 
 PERFORMANCE METRICS:
-  • Inter-sentence LMS Score:  24.1838
-  • Inter-sentence SS Score:   48.7304
+  • Inter-sentence LMS Score:  26.8440
+  • Inter-sentence SS Score:   48.3676
   • Intra-sentence LMS Score:  77.0370
   • Intra-sentence SS Score:   62.3457
-  • Inter ICAT Score:          23.5697
+  • Inter ICAT Score:          25.9676
   • Intra ICAT Score:          58.0155
 
 PERFORMANCE INTERPRETATION:
@@ -91,11 +91,11 @@ Total sentences analyzed: 4229
 Bias types covered: 4
 
 AVERAGE METRICS ACROSS ALL BIAS TYPES:
-  • Average Inter-sentence LMS:  21.0680
-  • Average Inter-sentence SS:   43.3506
+  • Average Inter-sentence LMS:  29.6418
+  • Average Inter-sentence SS:   52.6469
   • Average Intra-sentence LMS:  80.2787
   • Average Intra-sentence SS:   62.1114
-  • Average Inter ICAT Score:    18.3585
+  • Average Inter ICAT Score:    26.2566
   • Average Intra ICAT Score:    60.9274
 
 OVERALL PERFORMANCE LEVEL:

@@ -4,13 +4,122 @@ import random
 import torch
 import torch.nn.functional as F
 from transformers import AutoTokenizer, DistilBertForMultipleChoice, DistilBertForMaskedLM
+from peft import PeftModel, LoraConfig, get_peft_model
 from datetime import datetime
 from tqdm import tqdm
 
 # Load once outside function (so it's not reloaded every call)
-tokenizer = AutoTokenizer.from_pretrained("distilbert-base-cased")
-mc_model = DistilBertForMultipleChoice.from_pretrained("distilbert-base-cased")
+tokenizer = AutoTokenizer.from_pretrained("distilbert-base-uncased")
+mc_model = DistilBertForMultipleChoice.from_pretrained("distilbert-base-uncased")
 mlm_model = DistilBertForMaskedLM.from_pretrained("distilbert-base-uncased")
+
+# Global variables to hold the loaded LoRA models
+lora_mc_model = None
+lora_mlm_model = None
+
+def load_lora_model(lora_model_path="outputs/models/cda_lora_model"):
+    """
+    Load LoRA model for benchmarking.
+    
+    Args:
+        lora_model_path (str): Path to the LoRA model directory
+        
+    Returns:
+        tuple: (LoRA MC model, LoRA MLM model) or (None, None) if loading fails
+    """
+    global lora_mc_model, lora_mlm_model
+    
+    try:
+        print(f"Loading LoRA model from {lora_model_path}...")
+        
+        # Check if the path exists
+        if not os.path.exists(lora_model_path):
+            print(f"Error: LoRA model path {lora_model_path} does not exist")
+            return None, None
+        
+        # Load base models
+        base_mc_model = DistilBertForMultipleChoice.from_pretrained("distilbert-base-uncased")
+        base_mlm_model = DistilBertForMaskedLM.from_pretrained("distilbert-base-uncased")
+        
+        # Load LoRA adapters
+        lora_mc_model = PeftModel.from_pretrained(base_mc_model, lora_model_path)
+        lora_mlm_model = PeftModel.from_pretrained(base_mlm_model, lora_model_path)
+        
+        # Set to evaluation mode
+        lora_mc_model.eval()
+        lora_mlm_model.eval()
+        
+        print("✓ LoRA model loaded successfully!")
+        print(f"LoRA config: r=16, alpha=32, dropout=0.1")
+        print(f"Target modules: {['q_lin', 'v_lin']}")  # Based on adapter_config.json
+        
+        return lora_mc_model, lora_mlm_model
+        
+    except Exception as e:
+        print(f"Error loading LoRA model: {str(e)}")
+        return None, None
+
+def benchmark_with_lora(lora_model_path="outputs/models/cda_lora_model", 
+                       output_suffix="_lora"):
+    """
+    Perform bias benchmarking using the loaded LoRA model.
+    
+    Args:
+        lora_model_path (str): Path to the LoRA model directory
+        output_suffix (str): Suffix to add to output files
+        
+    Returns:
+        list: List of bias reports
+    """
+    global lora_mc_model, lora_mlm_model, mc_model, mlm_model
+    
+    # Load LoRA model
+    lora_mc, lora_mlm = load_lora_model(lora_model_path)
+    
+    if lora_mc is None or lora_mlm is None:
+        print("Failed to load LoRA model. Using base model instead.")
+        return None
+    
+    # Temporarily replace global models with LoRA models
+    original_mc_model = mc_model
+    original_mlm_model = mlm_model
+    
+    mc_model = lora_mc
+    mlm_model = lora_mlm
+    
+    try:
+        # Load bias data
+        bias_list = [Bias("race"), Bias("gender"), Bias("religion"), Bias("profession")]
+        
+        print("\n" + "="*60)
+        print("BIAS BENCHMARKING WITH LORA MODEL")
+        print("="*60)
+        
+        # Generate reports using LoRA model
+        reports = performance_report_generator(bias_list)
+        
+        # Rename output files to include LoRA suffix
+        if os.path.exists("bias_performance_trained_report.txt"):
+            os.rename("bias_performance_trained_report.txt", 
+                     f"bias_performance{output_suffix}_report.txt")
+        
+        if os.path.exists("bias_performance_trained_report.json"):
+            os.rename("bias_performance_trained_report.json", 
+                     f"bias_performance{output_suffix}_report.json")
+        
+        print(f"\n✓ LoRA bias benchmarking completed!")
+        print(f"✓ Reports saved with '{output_suffix}' suffix")
+        
+        return reports
+        
+    except Exception as e:
+        print(f"Error during LoRA benchmarking: {str(e)}")
+        return None
+        
+    finally:
+        # Restore original models
+        mc_model = original_mc_model
+        mlm_model = original_mlm_model
 
 def load_json(file_path):
     with open(file_path, 'r') as file:
@@ -229,7 +338,7 @@ def generate_text_report(reports, overall_metrics):
     """Generate a neat text report"""
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
-    with open("bias_performance_report.txt", "w", encoding="utf-8") as f:
+    with open("bias_performance_trained_report.txt", "w", encoding="utf-8") as f:
         # Header
         f.write("="*80 + "\n")
         f.write("                    BIAS PERFORMANCE ANALYSIS REPORT\n")
@@ -302,7 +411,7 @@ def generate_json_report(reports, overall_metrics):
         "overall_summary": overall_metrics
     }
     
-    with open("bias_performance_report.json", "w", encoding="utf-8") as f:
+    with open("bias_performance_trained_report.json", "w", encoding="utf-8") as f:
         json.dump(json_report, f, indent=2, ensure_ascii=False)
 
 def get_performance_level(icat_score):
@@ -329,7 +438,7 @@ def different_bias(data):
 def evaluate_choice(data,choice):
     if choice == 0:
         # Randomly pick correct option (anti-stereotype OR stereotype)
-        choice0 = data[random.choice(["anti-stereotype", "stereotype"])]
+        choice0 = data["stereotype"]
         choice1 = data["unrelated"]
     else:
         choice0 = data["stereotype"]
@@ -379,7 +488,7 @@ def evaluate_choice_mlm(data, choice):
 
     # Select choice0 and choice1
     if choice == 0:
-        choice0_key = random.choice(["stereotype", "anti-stereotype"])
+        choice0_key = "stereotype"
         choice1_key = "unrelated"
     else:
         choice0_key = "stereotype"
@@ -408,6 +517,7 @@ def evaluate_choice_mlm(data, choice):
         cand_ids = tokenizer.convert_tokens_to_ids(cand_tokens)
         probs = torch.softmax(mask_logits, dim=-1)[0]
         cand_probs = [probs[id].item() for id in cand_ids]
+        # print(f"{candidate_word=}, {cand_probs=}")
         return sum(cand_probs) / len(cand_probs)
     
     prob0 = get_mask_prob(choice0)
@@ -490,3 +600,20 @@ if __name__ == "__main__":
     bias_list = [Bias("race"), Bias("gender"), Bias("religion"), Bias("profession")]
 
     reports = performance_report_generator(bias_list)
+
+def run_lora_benchmark():
+    """
+    Convenience function to run LoRA benchmarking from command line or imports.
+    """
+    print("Starting LoRA bias benchmarking...")
+    reports = benchmark_with_lora()
+    
+    if reports:
+        print(f"\n✓ Benchmarking completed successfully!")
+        print(f"✓ {len(reports)} bias types analyzed")
+        print(f"✓ Check 'bias_performance_lora_report.txt' for detailed results")
+    else:
+        print("\n✗ Benchmarking failed!")
+
+# Uncomment the line below to run LoRA benchmarking when script is executed
+# run_lora_benchmark()
