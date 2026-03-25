@@ -43,6 +43,14 @@ Debiasing_SLM/
 │   │   ├── create_dataset.py    # Builds processed/dataset.json from raw files
 │   │   ├── data_splitter.py     # DataSplitter — train/val/test JSON splits
 │   │   └── utils.py             # load_file, save_json, clean_occupation helpers
+│   ├── benchmarking/
+│   │   ├── __init__.py
+│   │   └── stereoset.py         # StereoSet evaluator — icat/lm/ss scores via DistilBERT
+│   ├── examples/
+│   │   ├── __init__.py
+│   │   ├── masked_example.py    # Masked-LM prediction demo
+│   │   ├── mc_example.py        # Multiple-choice classification demo
+│   │   └── biasbios.py          # BiasBios dataset exploration demo
 │   ├── utils/
 │   │   ├── __init__.py
 │   │   └── logger.py            # Shared logger factory (console + optional file)
@@ -195,6 +203,24 @@ outputs/
     ├── loss_components.png
     ├── evaluation_metrics.png
     └── test_bias_consistency.png
+```
+
+---
+
+## Benchmarking
+
+The StereoSet benchmark measures bias using three scores:
+- **LM score** — how well the model assigns higher probability to meaningful sentences over nonsense
+- **SS score** (Stereotype Score) — how often the model prefers stereotyped over anti-stereotyped sentences (50% = unbiased)
+- **iCAT score** — combined metric: `LM × min(SS, 100-SS) / 50` (higher is better)
+
+Run the StereoSet evaluator:
+```python
+from src.benchmarking.stereoset import Bias
+
+bias = Bias("gender")
+bias.run()           # Runs DistilBERT on StereoSet gender subset
+bias.save_report()   # Saves JSON report
 ```
 
 ---
