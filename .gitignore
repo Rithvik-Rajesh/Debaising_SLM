@@ -5,10 +5,23 @@ build/
 dist/
 wheels/
 *.egg-info
-.history/
 
 # Virtual environments
 .venv
 
-output/*
+# macOS
+.DS_Store
 
+# Project outputs (models, reports, visualizations)
+outputs/
+output/debiased_model/
+
+# Generated data splits (reproducible, not versioned)
+data/processed/splits/
+
+# Logs
+*.log
+logs/
+
+# History
+.history/
